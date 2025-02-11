@@ -1,6 +1,4 @@
 # Cancer waiting times
-# report: https://publichealthscotland.scot/publications/cancer-waiting-times/cancer-waiting-times-1-july-to-30-september-2024/
-# https://www.opendata.nhs.scot/dataset/cancer-waiting-times
 
 # 62 day standard --------------------------------------------------------------
 
@@ -54,9 +52,22 @@ data31 <- content(httr::GET(query))$result$records %>%
          Scotland_indicator = round2(sum(Treated31)/sum(Number), 3)) %>%
   select(Quarter, HB, HB_indicator, Scotland_indicator)
 
+data <- rbind(data62 %>% mutate(Sub_indicator = "62 day standard"),
+              data31 %>% mutate(Sub_indicator = "31 day standard")) %>% 
+  pivot_longer(cols = c(HB_indicator, Scotland_indicator), names_to = "HB2", values_to = "HB_indicator") %>% 
+  mutate(HB = ifelse(HB2 == "Scotland_indicator", "Scotland", HB),
+         Indicator = "cancerWT",
+         To = ceiling_date(Quarter, "month") - days(1),
+         From = floor_date(To, "quarter"),
+         Target = 0.95,
+         Target_met = HB_indicator >= Target)  %>% 
+  select(From, To, HB, Indicator, Sub_indicator, HB_indicator, Target, Target_met) %>% 
+  arrange(desc(To), Indicator, HB) %>% 
+  distinct()
+
 # save -------------------------------------------------------------------------
 
-saveRDS(data62, "data/cancerWT62.rds")
-saveRDS(data31, "data/cancerWT31.rds")
+saveRDS(data, "data/cancerWT.rds")
+
 
 
