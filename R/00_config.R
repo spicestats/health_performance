@@ -35,5 +35,22 @@ Specialty_lookup <- readxl::read_xlsx("data/HBcodes_specialties_lookup.xlsx",
          Name = 2) %>% 
   filter(!is.na(Name))
 
+# Colours ----------------------------------------------------------------------
+
+spcols <- c(purple = "#500778",
+            darkblue = "#003057",
+            midblue = "#007DBA",
+            brightblue = "#00A9E0",
+            jade = "#108765",
+            green = "#568125",
+            magenta = "#B0008E",
+            mauve = "#B884CB",
+            red = "#E40046",
+            orange = "#E87722",
+            gold = "#CC8A00",
+            mustard = "#DAAA00")
+
+
+
 
 
