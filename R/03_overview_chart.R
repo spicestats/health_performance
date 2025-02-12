@@ -10,10 +10,10 @@ data <- readRDS("data/indicator_data.rds") %>%
   mutate(Indicator = factor(Indicator, levels = c(
     "smoke",
     "sick",
-    "GP",
     "PDS", "PT", "CAMHS",
     "outpatient", "TTG", "RTT", 
     "AandE",
+    "GP",
     "DCE",
     "cancerWT",
     "IVF", "ante", 
@@ -22,7 +22,6 @@ data <- readRDS("data/indicator_data.rds") %>%
     labels = c(
       "Smoking cessation",
       "Sickness absence",
-      "GP",
       "Dementia post-diagnostic\nsupport",
       "Psychological therapies\nwaiting times",
       "Child and adolescent mental\nhealth waiting times",
@@ -30,6 +29,7 @@ data <- readRDS("data/indicator_data.rds") %>%
       "Treatment time guarantee",
       "18 weeks referral\nto treatment",
       "Accident and Emergency\nwaiting times",
+      "GP",
       "Detect Cancer Early",
       "Cancer waiting times",
       "IVF waiting times",
@@ -108,7 +108,8 @@ plot <- wrap_plots(charts, ncol = 1) +
   theme(plot.margin = unit(c(0, 0.2, 0, 0), "cm"),
         legend.position = "top")
 
-plot
+#plot
 
 ggsave(plot = plot, "output/chart.png", dpi = 700, bg = "white", 
        width = 11, height = 10)
+
