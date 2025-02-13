@@ -6,21 +6,20 @@ source("R/00_config.R")
 data <- readRDS("data/indicator_data.rds") %>% 
   filter(HB == "Scotland",
          !is.na(Target_met),
-         From >= dmy("01-06-2015")) %>% 
+         From >= dmy("01-04-2015")) %>% 
   mutate(Indicator = factor(Indicator, levels = c(
-    "smoke",
     "sick",
     "PDS", "PT", "CAMHS",
     "outpatient", "TTG", "RTT", 
-    "AandE",
-    "GP",
     "DCE",
     "cancerWT",
-    "IVF", "ante", 
+    "AandE",
+    "smoke",
+    "GP",
+    "ante", "IVF",  
     "CDI", "SAB", 
     "drug", "ABI"),
     labels = c(
-      "Smoking cessation",
       "Sickness absence",
       "Dementia post-diagnostic\nsupport",
       "Psychological therapies\nwaiting times",
@@ -28,12 +27,13 @@ data <- readRDS("data/indicator_data.rds") %>%
       "12 weeks first outpatient\nappointment",
       "Treatment time guarantee",
       "18 weeks referral\nto treatment",
-      "Accident and Emergency\nwaiting times",
-      "GP",
       "Detect Cancer Early",
       "Cancer waiting times",
-      "IVF waiting times",
+      "Accident and Emergency\nwaiting times",
+      "Smoking cessation",
+      "GP",
       "Early access to\nantenatal services",
+      "IVF waiting times",
       "Clostridium difficile\ninfections",
       "SAB infections",
       "Drug and alcohol treatment\nwaiting times",
@@ -43,10 +43,15 @@ data <- readRDS("data/indicator_data.rds") %>%
                               Sub_indicator == "Two_days" ~ "48 hour access",
                               TRUE ~ Sub_indicator),
     Sub_indicator = ifelse(is.na(Sub_indicator), as.character(Indicator), 
-                           paste0(as.character(Indicator), " ", Sub_indicator))) %>% 
+                           paste0(as.character(Indicator), " ", Sub_indicator)),
+    Sub_indicator = fct_relevel(Sub_indicator, "GP 48 hour access", after = 13L)
+    ) %>% 
   
-  mutate(Label = ifelse(From == min(From), as.character(Sub_indicator), NA),
-         Label = ifelse(Label == "Cancer waiting times 62 day standard", "62 day standard", Label),
+  mutate(Label = case_when(From == min(From) ~ Sub_indicator),
+         Label = case_when(Label == "Cancer waiting times 62 day standard" ~ "62 day standard",
+                           Label == "GP 48 hour access" ~ "48 hour access",
+                           TRUE ~ Label),
+
          Target_met = ifelse(Target_met, "Target met", "Target missed"),
          Target_met = factor(Target_met),
          .by = Indicator) %>% 
@@ -61,17 +66,17 @@ charts <- lapply(indicators, function(i) {
     ggplot() +
     geom_rect(aes(xmin = From, xmax = To, fill = Target_met),
               ymin = -Inf, ymax = Inf, 
-              color = "white") +
-    geom_text(aes(label = Label), x = dmy("01052015"), y = 0.5, hjust = 1,
+              color = "white", linewidth = 0.4) +
+    geom_text(aes(label = Label), x = dmy("01022015"), y = 0.5, hjust = 1,
               size = 5,
               lineheight = 0.95) +
     
-    scale_x_date(limits = c(dmy("01062015", "01012025")),
+    scale_x_date(limits = c(dmy("01042015", "01012025")),
                  breaks = dmy(paste("1-1-", c(2015:2025))),
                  date_labels = "%Y",
-                 expand = expansion(add = c(1600, 30))) +
-    scale_fill_manual(values = c("Target missed" = unname(spcols["orange"]),
-                                 "Target met" = unname(spcols["midblue"])),
+                 expand = expansion(add = c(1700, 30))) +
+    scale_fill_manual(values = c("Target missed" = unname(spcols["darkblue"]),
+                                 "Target met" = unname(spcols["gold"])),
                       guide = guide_legend(reverse = TRUE),
                       drop = FALSE)  +
     theme_minimal() +

@@ -1,6 +1,5 @@
 # IVF waiting times
 
-
 # IVF centres
 
 id <- "c0ab7f62-0ad1-4890-8a15-0346143a1b06"
@@ -49,7 +48,9 @@ data <- content(httr::GET(query))$result$records %>%
          Target = 0.9,
          Target_met = HB_indicator >= Target) %>% 
   select(From, To, Geography, HB, Indicator, HB_indicator, Target, Target_met) %>% 
-  arrange(desc(To), Indicator, Geography, HB)
+  arrange(desc(To), Indicator, Geography, HB) %>% 
+  mutate(Target_met = ifelse(is.na(Target_met) & HB == "Scotland" & To < dmy("1 12 2015"), "TRUE", Target_met),
+         Target_met = as.logical(Target_met))
 
 saveRDS(data, "data/IVF.rds")
 
