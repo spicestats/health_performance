@@ -16,3 +16,4 @@ data <- lapply(files, readRDS) %>%
   distinct()
 
 saveRDS(data, "data/indicator_data.rds")
+

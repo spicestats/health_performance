@@ -4,6 +4,9 @@
 # intuitive definition. Until 2019/20, both sets of stats were published. Since
 # then, I believe, only the intuitive definition. 
 
+# However, the HACE team provided the 48 hour indicator for Scotland and HBs on
+# request. (Giuliana.Giuliani@gov.scot)
+
 # "For the LDP Standard, individuals are considered to have been able to obtain 
 # two working day access if they were offered an appointment within two working 
 # days, even if they then turned the appointment down."
@@ -49,7 +52,7 @@ data2122 <- data2122_advance_HB %>%
          Sub_indicator = "Advance")
 
 
-data2324 <- readxl::read_xlsx("data/HACE_2324.xlsx", sheet = "Positive, Neutral or Negative") %>% 
+data2324_advance <- readxl::read_xlsx("data/HACE_2324.xlsx", sheet = "Positive, Neutral or Negative") %>% 
   rename(Area_type = 1,
          HB = 3,
          Q = 6,
@@ -60,6 +63,18 @@ data2324 <- readxl::read_xlsx("data/HACE_2324.xlsx", sheet = "Positive, Neutral 
   mutate(Sub_indicator = "Advance",
          Year = "2023/24",
          HB = str_replace(HB, "NHS ", "")) 
+
+data2324_48 <- readxl::read_xlsx("data/HACE2023_24_LDPindicators.xlsx", sheet = "48 hs access") %>% 
+  rename(HB = 1, 
+         HB_indicator = 3) %>% 
+  mutate(HB = str_replace(HB, "NHS ", ""),
+         HB_indicator = HB_indicator/100,
+         Sub_indicator = "Two_days",
+         Year = "2023/24") %>% 
+  select(-hb_code)
+
+data2324 <- rbind(data2324_advance, data2324_48)
+
 
 # combine all ------------------------------------------------------------------
 
