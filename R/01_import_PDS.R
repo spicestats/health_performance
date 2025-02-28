@@ -1,18 +1,37 @@
 # Dementia post-diagnostic support
 
-# manual update of url required!
-url <- "https://publichealthscotland.scot/media/27287/2024-05-28_dementia-pds_excel-tables_final.xlsx"
+# get latest release 
 
-download.file(url, "data/PDS.xlsx", mode = "wb")
+# release page
+page <- "https://publichealthscotland.scot/publications/show-all-releases?id=20491"
 
-data <- readxl::read_xlsx("data/PDS.xlsx", sheet = "Tab 7", range = "B5:H20") %>% 
-  pivot_longer(cols = 2:7, values_to = "HB_indicator", names_to = "Year") %>% 
-  rename(HB = 1) %>% 
-  mutate(HB = str_replace(HB, "NHS ", ""),
-         Year = str_sub(Year, 1, 7),
-         HB_indicator = round2(HB_indicator, 3),
-         From = dmy(paste("1 4",str_sub(Year, 1, 4))),
-         To = dmy(paste("31 3",str_sub(Year, 6, 7))),
+session <- polite::bow(page)
+
+urls <- polite::scrape(session) %>% 
+  html_elements("a") %>% 
+  html_attr("href")
+
+url <- urls[grepl("dementia-post-diagnostic-support-local-delivery-plan-standard-figures", urls)][1]
+
+session2 <- polite::bow(paste0("https://publichealthscotland.scot", url))
+
+files <- polite::scrape(session2) %>% 
+  html_nodes(".download-file") %>% 
+  html_elements("a") %>% 
+  html_attr("href")
+
+xl_file <- paste0("https://publichealthscotland.scot", files[grepl("xls", files)])
+
+download.file(xl_file, "data/PDS.xlsx", mode = "wb")
+
+data <- readxl::read_xlsx("data/PDS.xlsx", sheet = "data") %>% 
+  filter(category == "geog",
+         grepl("NHS", category_split)) %>% 
+  select(fy, category_split, rate) %>% 
+  mutate(HB = str_replace(category_split, "NHS ", ""),
+         HB_indicator = round2(as.numeric(rate), 3),
+         From = dmy(paste("1 4",str_sub(fy, 1, 4))),
+         To = dmy(paste("31 3",str_sub(fy, 6, 7))),
          Indicator = "PDS",
          Target = 1,
          Target_met = HB_indicator >= Target)  %>% 
@@ -20,3 +39,7 @@ data <- readxl::read_xlsx("data/PDS.xlsx", sheet = "Tab 7", range = "B5:H20") %>
   arrange(desc(To), Indicator, HB)
 
 saveRDS(data, "data/PDS.rds")
+
+
+
+

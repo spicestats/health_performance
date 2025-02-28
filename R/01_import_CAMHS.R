@@ -11,6 +11,7 @@ data <- content(httr::GET(query))$result$records %>%
          All = 3,
          Upto18 = 4) %>% 
   left_join(HB_lookup, by = "HBT") %>% 
+  filter(!is.na(All)) %>% 
   mutate(.by = c(Month, HB),
          Month = ym(Month),
          HB_indicator = round2(Upto18 / All, 3)) %>% 

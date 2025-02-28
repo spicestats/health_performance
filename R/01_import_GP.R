@@ -2,7 +2,7 @@
 
 # note that for the 48 hour indicator, the LDP definition is different from the
 # intuitive definition. Until 2019/20, both sets of stats were published. Since
-# then, I believe, only the intuitive definition. 
+# then, only the intuitive definition. 
 
 # However, the HACE team provided the 48 hour indicator for Scotland and HBs on
 # request. (Giuliana.Giuliani@gov.scot)
@@ -47,8 +47,7 @@ data2122_advance_Scot <- readxl::read_xlsx("data/HACE_2122.xlsx", sheet = "Scotl
 
 data2122 <- data2122_advance_HB %>% 
   rbind(data2122_advance_Scot) %>% 
-  mutate(HB = "Scotland",
-         Year = "2021/22",
+  mutate(Year = "2021/22",
          Sub_indicator = "Advance")
 
 
@@ -94,7 +93,7 @@ data <- rbind(data2324, data2122, data1920) %>%
                    Sub_indicator = "Two_days",
                    HB_indicator = 0.89, # from SG LDP webpage
                    Target = 0.9) %>% 
-          mutate(Target_met = HB_indicator > Target)) %>% 
+          mutate(Target_met = HB_indicator >= Target)) %>% 
   arrange(desc(To), Indicator, Sub_indicator, HB)
 
 saveRDS(data, "data/GP.rds")

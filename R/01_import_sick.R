@@ -1,5 +1,33 @@
 # Sickness absences
 
+# # get latest release 
+# 
+# # release page
+# page <- "https://www.publichealthscotland.scot/publications/show-all-releases?id=20552"
+# 
+# session <- polite::bow(page)
+# 
+# urls <- polite::scrape(session) %>% 
+#   html_elements("a") %>% 
+#   html_attr("href")
+# 
+# url <- urls[grepl("nhs-stop-smoking-services-scotland-april", urls)][1]
+# 
+# session2 <- polite::bow(paste0("https://publichealthscotland.scot", url))
+# 
+# files <- polite::scrape(session2) %>% 
+#   html_nodes(".download-file") %>% 
+#   html_elements("a") %>% 
+#   html_attr("href")
+# 
+# xl_file <- paste0("https://publichealthscotland.scot", files[grepl("xls", files)])
+# 
+# download.file(xl_file, "data/sick.xlsx", mode = "wb")
+
+
+
+# data from dashboard is more machine readable
+
 # Scotland-level data
 data_sc <- readxl::read_xlsx("data/sickness_absences_scotland_from_dashboard.xlsx",
                              range = "A3:B14") %>% 
