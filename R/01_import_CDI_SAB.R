@@ -59,7 +59,8 @@ data <- readxl::read_excel(file, sheet = "trend data") %>%
          Target = ifelse(Indicator == "SAB", 0.24, 0.32),
          Target_met = HB_indicator <= Target) %>% 
   filter(Indicator %in% c("CDI", "SAB"),
-         ref2 == "HC") %>% 
+         ref2 == "HC",
+         To < dmy("01032017")) %>% 
   select(From, To, HB, Indicator, HB_indicator, Target, Target_met)
 
 

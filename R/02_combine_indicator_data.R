@@ -19,7 +19,7 @@ data <- lapply(files, readRDS) %>%
   distinct() %>% 
   
   # remove other geographies for now
-  filter(Geography == c("Country", "Health board"),
+  filter(Geography %in% c("Country", "Health board"),
          !grepl("NHS|State Hospital|Golden Jubilee|Centre|Ambulance|Health", HB)) 
 
 
@@ -27,18 +27,41 @@ saveRDS(data, "data/indicator_data.rds")
 
 # save xlsx for powerBI --------------------------------------------------------
 
-indicators1 <- c("TTG",
-                 "RTT",
-                 "outpatient",
-                 "AandE",
-                 "CAMHS",
-                 "PT",
-                 "cancerWT 62 day standard",
-                 "cancerWT 31 day standard",
-                 "PDS",
-                 "drug",
-                 "ante",
-                 "IVF")
+indicator_levels <- c("sick",
+                      "PDS", "PT", "CAMHS",
+                      "outpatient", "TTG", "RTT", 
+                      "DCE",
+                      "cancerWT 31 day standard",
+                      "cancerWT 62 day standard",
+                      "AandE",
+                      "smoke",
+                      "GP Advance",
+                      "GP Two_days",
+                      "ante", "IVF",  
+                      "CDI", "SAB", 
+                      "drug", "ABI")
+
+
+indicator_labels <- c("Sickness absence",
+                      "Dementia post-diagnostic support",
+                      "Psychological therapies",
+                      "Child and adolescent mental health",
+                      "12 weeks first outpatient appointment",
+                      "Treatment time guarantee",
+                      "18 weeks referral to treatment",
+                      "Detect Cancer Early",
+                      "Cancer - 31 day standard",
+                      "Cancer - 62 day standard",
+                      "Accident and Emergency",
+                      "Smoking cessation",
+                      "GP Advance booking",
+                      "GP 48 hr access",
+                      "Early access to antenatal services",
+                      "IVF",
+                      "Clostridium difficile infections",
+                      "SAB infections",
+                      "Drug and alcohol treatment",
+                      "Alcohol Brief Interventions")
 
 # Health boards
 HBs <- c("Scotland",
@@ -58,15 +81,38 @@ HBs <- c("Scotland",
          "Tayside",
          "Western Isles")
 
-data  %>% 
-  filter(Indicator %in% indicators1,
-         HB %in% HBs) %>% 
+data_prepped <- data  %>% 
+  filter(HB %in% HBs,
+         To >= dmy("01012015")) %>% 
   mutate(Indicator = ifelse(!is.na(Sub_indicator), paste(Indicator, Sub_indicator), Indicator),
-         Indicator = factor(Indicator, levels = indicators_01, ordered = TRUE),
-         HB = factor(HB, levels = HBs, ordered = TRUE)) %>% 
-  select(-Sub_indicator) %>% 
+         Indicator = factor(Indicator, levels = indicator_levels, labels = indicator_labels, ordered = TRUE),
+         HB = factor(HB, levels = HBs, ordered = TRUE),
+         Period = case_when(as.numeric(difftime(To, From), unit = "days") %in% c(1090:1460) ~ paste("Two years to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(729:731) ~ paste("Two years to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(360: 370) ~ paste("Year to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(88:95) ~ paste("Quarter to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(27:31) ~ paste("Month to", format(To, "%d %b %Y")))) %>% 
+  
+  select(Indicator, To, HB, HB_indicator, Target, Period)
+
+# add in extra rows for the target
+
+later <- data_prepped %>% 
+  filter(.by = c(HB, Indicator),
+         To == max(To)) %>% 
+  mutate(To = dmy("01012035"),
+         HB_indicator = NA,
+         Period = NA)
+
+earlier <- data_prepped %>% 
+  filter(.by = c(HB, Indicator),
+         To == min(To)) %>% 
+  mutate(To = dmy("01012015"),
+         HB_indicator = NA,
+         Period = NA)
+  
+data_prepped %>% 
+  rbind(later, earlier)  %>% 
   arrange(Indicator, desc(To), HB) %>% 
-  
-  
-  writexl::write_xlsx("output/indicator_data_1.xlsx")
+  writexl::write_xlsx("output/indicator_data.xlsx")
 
