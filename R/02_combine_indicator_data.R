@@ -2,9 +2,16 @@ library(tidyverse)
 
 files <- list.files("data", ".rds", full.names = TRUE)
 files <- files[!grepl("scraped", files)]
+files <- files[!grepl("indicator_data", files)]
+
+files_old <- readRDS("data/indicator_data.rds")
 
 data <- lapply(files, readRDS) %>% 
   bind_rows() %>% 
+  
+  # files_old is needed to overwrite (and not d uplicate) any revised stats
+  mutate(files_old = FALSE) %>% 
+  rbind(files_old %>% mutate(files_old = TRUE)) %>% 
   mutate(Geography = case_when(HB == "Scotland" ~ "Country",
                                !is.na(Geography) ~ Geography,
                                TRUE ~ "Health board"),
@@ -14,9 +21,10 @@ data <- lapply(files, readRDS) %>%
                         HB == "Glasgow" ~ "Greater Glasgow and Clyde",
                         TRUE ~ HB)) %>% 
   select(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
-         Target, Target_met) %>% 
-  arrange(Indicator, Sub_indicator, desc(To), Geography, HB) %>% 
-  distinct() %>% 
+         Target, Target_met, files_old) %>% 
+  arrange(desc(files_old), Indicator, Sub_indicator, desc(To), Geography, HB) %>% 
+  distinct(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
+           Target, Target_met) %>% 
   
   # remove other geographies for now
   filter(Geography %in% c("Country", "Health board"),
@@ -29,7 +37,7 @@ saveRDS(data, "data/indicator_data.rds")
 
 indicator_levels <- c("sick",
                       "PDS", "PT", "CAMHS",
-                      "outpatient", "TTG", "RTT", 
+                      "outpatient", "TTG", "RTT", "diagnostic",
                       "DCE",
                       "cancerWT 31 day standard",
                       "cancerWT 62 day standard",
@@ -49,6 +57,7 @@ indicator_labels <- c("Sickness absence",
                       "12 weeks first outpatient appointment",
                       "Treatment time guarantee",
                       "18 weeks referral to treatment",
+                      "Diagnostic waiting times",
                       "Detect Cancer Early",
                       "Cancer - 31 day standard",
                       "Cancer - 62 day standard",
@@ -73,7 +82,6 @@ HBs <- c("Scotland",
          "Grampian",
          "Greater Glasgow and Clyde",
          "Highland",    
-         "Island Boards",
          "Lanarkshire",
          "Lothian",
          "Orkney",
