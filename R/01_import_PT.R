@@ -18,6 +18,9 @@ data <- content(httr::GET(query))$result$records %>%
          Target_met = HB_indicator >= Target,
          Indicator = "PT")  %>% 
   select(From, To, HB, Indicator, HB_indicator, Target, Target_met) %>% 
-  arrange(desc(To), Indicator, HB)
+  arrange(desc(To), Indicator, HB) %>% 
+  
+  # there is an error in the data (13/03/2025); exclude point
+  filter(!(HB == "Greater Glasgow and Clyde" & HB_indicator > 1))
 
 saveRDS(data, "data/PT.rds")
