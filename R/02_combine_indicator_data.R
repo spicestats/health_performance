@@ -118,9 +118,8 @@ data_prepped <- data  %>%
          To >= dmy("01012015")) %>% 
   mutate(Indicator = ifelse(!is.na(Sub_indicator), paste(Indicator, Sub_indicator), Indicator),
          Indicator = factor(Indicator, levels = indicator_levels, labels = indicator_labels, ordered = TRUE),
-         HB = factor(HB, levels = HBs, ordered = TRUE),
-         HB_order = match(HB, HBs)) %>% 
-  select(Indicator, From, To, HB, HB_indicator, Target, Target_met, HB_order)
+         HB = factor(HB, levels = HBs, ordered = TRUE)) %>% 
+  select(Indicator, From, To, HB, HB_indicator, Target, Target_met)
 
 # add in extra rows for the target
 
@@ -138,6 +137,15 @@ earlier <- data_prepped %>%
 
 final <- data_prepped %>% 
   rbind(later, earlier)  %>% 
+  
+  # make Scotland values a separate column
+  mutate(loc = ifelse(HB == "Scotland", "Scotland_indicator", "HB_indicator")) %>% 
+  pivot_wider(names_from = "loc", values_from = "HB_indicator") %>% 
+  mutate(.by = c(Indicator, To),
+         Scotland_indicator = max(Scotland_indicator, na.rm = TRUE),
+         Scotland_indicator = ifelse(Scotland_indicator == -Inf, NA, Scotland_indicator)) %>% 
+  filter(HB != "Scotland") %>% 
+  
   mutate(Period = case_when(as.numeric(difftime(To, From), unit = "days") %in% c(1090:1460) ~ paste("Two years to", format(To, "%d %b %Y")),
                             as.numeric(difftime(To, From), unit = "days") %in% c(729:731) ~ paste("Two years to", format(To, "%d %b %Y")),
                             as.numeric(difftime(To, From), unit = "days") %in% c(360: 370) ~ paste("Year to", format(To, "%d %b %Y")),
@@ -149,19 +157,33 @@ final <- data_prepped %>%
          Formatted_value = case_when(Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") ~ comma(HB_indicator, 1),
                                      Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(HB_indicator, 0.01),
                                      TRUE ~ percent(HB_indicator, 0.1)),
-         Target_label = case_when(!is.na(HB_indicator) & Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") & Target_met ~ paste0(Formatted_value, " - value meets standard (at least ", comma(Target, 1), ")"),
-                                  !is.na(HB_indicator) & Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") & !Target_met ~ paste0(Formatted_value, " - value does not meet standard (at least ", comma(Target, 1), ")"),
-                                  !is.na(HB_indicator) & Indicator %in% c("SAB infections", "Clostridium difficile infections") & Target_met ~ paste0(Formatted_value, " - value meets standard (at most ", Target, ")"),
-                                  !is.na(HB_indicator) & Indicator %in% c("SAB infections", "Clostridium difficile infections") & !Target_met ~ paste0(Formatted_value, " - value does not meet standard (at most ", Target, ")"),
-                                  !is.na(HB_indicator) & Target == 1 & Target_met ~ paste0(percent(HB_indicator, 0.1), " - value meets standard (", percent(Target, 1), ")"),
-                                  !is.na(HB_indicator) & Target == 1 & !Target_met ~ paste0(percent(HB_indicator, 0.1), " - value does not meet standard (", percent(Target, 1), ")"),
-                                  !is.na(HB_indicator) & Target_met & HB_indicator <= Target ~ paste0(percent(HB_indicator, 0.1), " - value meets standard (at most ", percent(Target, 1), ")"),
-                                  !is.na(HB_indicator) & Target_met & HB_indicator >= Target ~  paste0(percent(HB_indicator, 0.1), " - value meets standard (at least ", percent(Target, 1), ")"),
-                                  !is.na(HB_indicator) & !Target_met & HB_indicator <= Target ~  paste0(percent(HB_indicator, 0.1), " - value does not meet standard (at least ", percent(Target, 1), ")"),
-                                  !is.na(HB_indicator) & !Target_met & HB_indicator >= Target ~   paste0(percent(HB_indicator, 0.1), " - value does not meet standard (at most ", percent(Target, 1), ")")),
-         Defs = factor(Indicator, levels = indicator_labels, labels = indicator_definitions)) %>% 
+         Formatted_Scotland_value = case_when(Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") ~ comma(Scotland_indicator, 1),
+                                     Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(Scotland_indicator, 0.01),
+                                     TRUE ~ percent(Scotland_indicator, 0.1)),
+         Scotland_comparison = case_when(HB_indicator < Scotland_indicator ~ "lower than",
+                                         HB_indicator > Scotland_indicator ~ "higher than",
+                                         HB_indicator == Scotland_indicator ~ "the same as"),
+         Target_label = case_when(!is.na(HB_indicator) & Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") & Target_met ~ paste0("meets standard (at least ", comma(Target, 1), ")"),
+                                  !is.na(HB_indicator) & Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") & !Target_met ~ paste0("does not meet standard (at least ", comma(Target, 1), ")"),
+                                  !is.na(HB_indicator) & Indicator %in% c("SAB infections", "Clostridium difficile infections") & Target_met ~ paste0("meets standard (at most ", Target, ")"),
+                                  !is.na(HB_indicator) & Indicator %in% c("SAB infections", "Clostridium difficile infections") & !Target_met ~ paste0("does not meet standard (at most ", Target, ")"),
+                                  !is.na(HB_indicator) & Target == 1 & Target_met ~ paste0("meets standard (", percent(Target, 1), ")"),
+                                  !is.na(HB_indicator) & Target == 1 & !Target_met ~ paste0("does not meet standard (", percent(Target, 1), ")"),
+                                  !is.na(HB_indicator) & Target_met & HB_indicator <= Target ~ paste0("meets standard (at most ", percent(Target, 1), ")"),
+                                  !is.na(HB_indicator) & Target_met & HB_indicator >= Target ~  paste0("meets standard (at least ", percent(Target, 1), ")"),
+                                  !is.na(HB_indicator) & !Target_met & HB_indicator <= Target ~  paste0("does not meet standard (at least ", percent(Target, 1), ")"),
+                                  !is.na(HB_indicator) & !Target_met & HB_indicator >= Target ~   paste0("does not meet standard (at most ", percent(Target, 1), ")")),
+         Target_label1 = ifelse(!is.na(Target_label), paste0("Health board estimate ", Target_label, "."), NA),
+         Target_label2 = ifelse(!is.na(Scotland_comparison), paste0("Health board estimate is ", Scotland_comparison, " Scotland estimate (", Formatted_Scotland_value, ")."), NA),
+         Defs = factor(Indicator, levels = indicator_labels, labels = indicator_definitions),
+         
+         # remove Scotland values from smoking measure as the scale of it messes up the charts
+         Scotland_indicator = ifelse(Indicator == "Smoking cessation", NA, Scotland_indicator),
+         Target_label2 = ifelse(Indicator == "Smoking cessation", NA, Target_label2)
+         
+         ) %>% 
   arrange(Indicator, desc(To), HB) %>% 
-  select(-From, -Target_met)
+  select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label)
 
 
 writexl::write_xlsx(final, "output/indicator_data.xlsx")
