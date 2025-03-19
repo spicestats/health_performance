@@ -10,7 +10,7 @@ files_old <- readRDS("data/indicator_data.rds")
 data <- lapply(files, readRDS) %>% 
   bind_rows() %>% 
   
-  # files_old is needed to overwrite (and not d uplicate) any revised stats
+  # files_old is needed to overwrite (and not duplicate) any revised stats
   mutate(files_old = FALSE) %>% 
   rbind(files_old %>% mutate(files_old = TRUE)) %>% 
   mutate(Geography = case_when(HB == "Scotland" ~ "Country",
@@ -23,9 +23,10 @@ data <- lapply(files, readRDS) %>%
                         TRUE ~ HB)) %>% 
   select(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
          Target, Target_met, files_old) %>% 
-  arrange(desc(files_old), Indicator, Sub_indicator, desc(To), Geography, HB) %>% 
-  distinct(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
-           Target, Target_met) %>% 
+  arrange(Indicator, Sub_indicator, Geography, HB, desc(To), desc(files_old)) %>% 
+  
+  # filter out any revised values
+  distinct(Indicator, Sub_indicator, From, To, Geography, HB, Target, Target_met, .keep_all = TRUE) %>% 
   
   # remove other geographies for now
   filter(Geography %in% c("Country", "Health board"),
@@ -137,10 +138,11 @@ earlier <- data_prepped %>%
 
 final <- data_prepped %>% 
   rbind(later, earlier)  %>% 
-  
+
   # make Scotland values a separate column
-  mutate(loc = ifelse(HB == "Scotland", "Scotland_indicator", "HB_indicator")) %>% 
+  mutate(loc = ifelse(HB == "Scotland", "Scotland_indicator", "HB_indicator")) %>%
   pivot_wider(names_from = "loc", values_from = "HB_indicator") %>% 
+  
   mutate(.by = c(Indicator, To),
          Scotland_indicator = max(Scotland_indicator, na.rm = TRUE),
          Scotland_indicator = ifelse(Scotland_indicator == -Inf, NA, Scotland_indicator)) %>% 
@@ -154,6 +156,8 @@ final <- data_prepped %>%
          Target_met = ifelse(is.na(HB_indicator), NA, Target_met),
          Target_col = case_when(Target_met ~ "#568125", 
                                 !Target_met ~ "#E40046"),
+         Symbol = case_when(Target_met ~ "J",
+                            !Target_met ~ "x"),
          Formatted_value = case_when(Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") ~ comma(HB_indicator, 1),
                                      Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(HB_indicator, 0.01),
                                      TRUE ~ percent(HB_indicator, 0.1)),
@@ -173,15 +177,15 @@ final <- data_prepped %>%
                                   !is.na(HB_indicator) & Target_met & HB_indicator >= Target ~  paste0("meets standard (at least ", percent(Target, 1), ")"),
                                   !is.na(HB_indicator) & !Target_met & HB_indicator <= Target ~  paste0("does not meet standard (at least ", percent(Target, 1), ")"),
                                   !is.na(HB_indicator) & !Target_met & HB_indicator >= Target ~   paste0("does not meet standard (at most ", percent(Target, 1), ")")),
-         Target_label1 = ifelse(!is.na(Target_label), paste0("Health board estimate ", Target_label, "."), NA),
-         Target_label2 = ifelse(!is.na(Scotland_comparison), paste0("Health board estimate is ", Scotland_comparison, " Scotland estimate (", Formatted_Scotland_value, ")."), NA),
+         Target_label1 = ifelse(!is.na(Target_label), paste0(HB, " ", Target_label, "."), NA),
+         Target_label2 = ifelse(!is.na(Scotland_comparison), paste0(HB, " estimate is ", Scotland_comparison, " Scotland estimate (", Formatted_Scotland_value, ")."), NA),
          Defs = factor(Indicator, levels = indicator_labels, labels = indicator_definitions),
          
          # remove Scotland values from smoking measure as the scale of it messes up the charts
          Scotland_indicator = ifelse(Indicator == "Smoking cessation", NA, Scotland_indicator),
-         Target_label2 = ifelse(Indicator == "Smoking cessation", NA, Target_label2)
+         Target_label2 = ifelse(Indicator == "Smoking cessation", NA, Target_label2),
          
-         ) %>% 
+         HB = str_replace(HB, " and ", " & ")) %>% 
   arrange(Indicator, desc(To), HB) %>% 
   select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label)
 
@@ -199,11 +203,6 @@ final %>%
                             "SAB infections",
                             "Alcohol Brief Interventions")))
 
-# check order
-final %>% 
-  select(HB, HB_order) %>% 
-  distinct() %>% 
-  arrange(HB_order)
 
 final %>% 
   summarise(.by = Indicator,
