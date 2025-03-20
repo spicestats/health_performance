@@ -32,6 +32,7 @@ source("R/00_config.R")
 lapply(c(files_od, files_xl), source)
 
 source("R/02_combine_indicator_data.R")
+source("R/03_spreadsheets.R")
 
 # charts
 source("R/03_overview_chart.R")
