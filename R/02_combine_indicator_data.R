@@ -1,5 +1,8 @@
+# load -------------------------------------------------------------------------
+
 library(tidyverse)
 library(scales)
+library(openxlsx)
 
 files <- list.files("data", ".rds", full.names = TRUE)
 files <- files[!grepl("scraped", files)]
@@ -7,35 +10,7 @@ files <- files[!grepl("indicator_data", files)]
 
 files_old <- readRDS("data/indicator_data.rds")
 
-data <- lapply(files, readRDS) %>% 
-  bind_rows() %>% 
-  
-  # files_old is needed to overwrite (and not duplicate) any revised stats
-  mutate(files_old = FALSE) %>% 
-  rbind(files_old %>% mutate(files_old = TRUE)) %>% 
-  mutate(Geography = case_when(HB == "Scotland" ~ "Country",
-                               !is.na(Geography) ~ Geography,
-                               TRUE ~ "Health board"),
-         HB = str_replace(HB, "&", "and"),
-         HB = ifelse(HB == "NHS24", "NHS 24", HB),
-         HB = case_when(grepl("Golden Jubilee", HB) ~ "Golden Jubilee", 
-                        HB == "Glasgow" ~ "Greater Glasgow and Clyde",
-                        TRUE ~ HB)) %>% 
-  select(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
-         Target, Target_met, files_old) %>% 
-  arrange(Indicator, Sub_indicator, Geography, HB, desc(To), desc(files_old)) %>% 
-  
-  # filter out any revised values
-  distinct(Indicator, Sub_indicator, From, To, Geography, HB, Target, Target_met, .keep_all = TRUE) %>% 
-  
-  # remove other geographies for now
-  filter(Geography %in% c("Country", "Health board"),
-         !grepl("NHS|State Hospital|Golden Jubilee|Centre|Ambulance|Health", HB))
-
-
-saveRDS(data, "data/indicator_data.rds")
-
-# save xlsx for powerBI --------------------------------------------------------
+# names & defs -----------------------------------------------------------------
 
 indicator_levels <- c("sick",
                       "PDS", "PT", "CAMHS",
@@ -50,6 +25,30 @@ indicator_levels <- c("sick",
                       "ante", "IVF",  
                       "CDI", "SAB", 
                       "drug", "ABI")
+
+links <- c(
+  "https://turasdata.nes.nhs.scot/data-and-reports/official-workforce-statistics/all-official-statistics-publications/03-december-2024-workforce/?pageid=13014",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20491",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20499",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20497",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20544",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20544",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20545",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20543",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20465",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20467",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20467",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20520",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20552",
+  "https://www.gov.scot/publications/health-care-experience-survey-2023-24-national-results/",
+  "https://www.gov.scot/publications/health-care-experience-survey-2023-24-national-results/",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20574",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20549",
+  "https://www.nss.nhs.scot/publications/quarterly-epidemiological-data-on-clostridioides-difficile-infection-escherichia-coli-bacteraemia-staphylococcus-aureus-bacteraemia-and-surgical-site-infection-in-scotland-july-to-september-q3-2024/",
+  "https://www.nss.nhs.scot/publications/quarterly-epidemiological-data-on-clostridioides-difficile-infection-escherichia-coli-bacteraemia-staphylococcus-aureus-bacteraemia-and-surgical-site-infection-in-scotland-july-to-september-q3-2024/",
+  "https://publichealthscotland.scot/publications/show-all-releases?id=20553",
+  "https://publichealthscotland.scot/publications/alcohol-brief-interventions/alcohol-brief-interventions-201920/")
+
 
 indicator_labels <- c("Sickness absence",
                       "Dementia post-diagnostic support",
@@ -114,6 +113,38 @@ HBs <- c("Scotland",
          "Western Isles",
          "Island Boards")
 
+# combine an tidy all indicators -----------------------------------------------
+
+data <- lapply(files, readRDS) %>% 
+  bind_rows() %>% 
+  
+  # files_old is needed to overwrite (and not duplicate) any revised stats
+  mutate(files_old = FALSE) %>% 
+  rbind(files_old %>% mutate(files_old = TRUE)) %>% 
+  mutate(Geography = case_when(HB == "Scotland" ~ "Country",
+                               !is.na(Geography) ~ Geography,
+                               TRUE ~ "Health board"),
+         HB = str_replace(HB, "&", "and"),
+         HB = ifelse(HB == "NHS24", "NHS 24", HB),
+         HB = case_when(grepl("Golden Jubilee", HB) ~ "Golden Jubilee", 
+                        HB == "Glasgow" ~ "Greater Glasgow and Clyde",
+                        TRUE ~ HB)) %>% 
+  select(Indicator, Sub_indicator, From, To, Geography, HB, HB_indicator, 
+         Target, Target_met, files_old) %>% 
+  arrange(Indicator, Sub_indicator, Geography, HB, desc(To), desc(files_old)) %>% 
+  
+  # filter out any revised values
+  distinct(Indicator, Sub_indicator, From, To, Geography, HB, Target, Target_met, .keep_all = TRUE) %>% 
+  
+  # remove other geographies for now
+  filter(Geography %in% c("Country", "Health board"),
+         !grepl("NHS|State Hospital|Golden Jubilee|Centre|Ambulance|Health", HB))
+
+
+saveRDS(data, "data/indicator_data.rds")
+
+# xlsx for powerBI -------------------------------------------------------------
+
 data_prepped <- data  %>% 
   filter(HB %in% HBs,
          To >= dmy("01012015")) %>% 
@@ -138,7 +169,7 @@ earlier <- data_prepped %>%
 
 final <- data_prepped %>% 
   rbind(later, earlier)  %>% 
-
+  
   # make Scotland values a separate column
   mutate(loc = ifelse(HB == "Scotland", "Scotland_indicator", "HB_indicator")) %>%
   pivot_wider(names_from = "loc", values_from = "HB_indicator") %>% 
@@ -162,8 +193,8 @@ final <- data_prepped %>%
                                      Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(HB_indicator, 0.01),
                                      TRUE ~ percent(HB_indicator, 0.1)),
          Formatted_Scotland_value = case_when(Indicator %in% c("Smoking cessation", "Alcohol Brief Interventions") ~ comma(Scotland_indicator, 1),
-                                     Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(Scotland_indicator, 0.01),
-                                     TRUE ~ percent(Scotland_indicator, 0.1)),
+                                              Indicator %in% c("SAB infections", "Clostridium difficile infections") ~ comma(Scotland_indicator, 0.01),
+                                              TRUE ~ percent(Scotland_indicator, 0.1)),
          Scotland_comparison = case_when(HB_indicator < Scotland_indicator ~ "lower than",
                                          HB_indicator > Scotland_indicator ~ "higher than",
                                          HB_indicator == Scotland_indicator ~ "the same as"),
@@ -189,8 +220,86 @@ final <- data_prepped %>%
   arrange(Indicator, desc(To), HB) %>% 
   select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label)
 
-
 writexl::write_xlsx(final, "output/indicator_data.xlsx")
+
+# xlsx for publishing ----------------------------------------------------------
+
+xls_pub <- data_prepped %>% 
+  mutate(Period = case_when(as.numeric(difftime(To, From), unit = "days") %in% c(1090:1460) ~ paste("Two years to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(729:731) ~ paste("Two years to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(360: 370) ~ paste("Year to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(88:95) ~ paste("Quarter to", format(To, "%d %b %Y")),
+                            as.numeric(difftime(To, From), unit = "days") %in% c(27:31) ~ paste("Month to", format(To, "%d %b %Y"))),
+         HB_indicator = ifelse(is.nan(HB_indicator), NA, HB_indicator)) %>% 
+  select(Indicator, HB, Period, To, HB_indicator, Target, Target_met) %>% 
+  arrange(Indicator, desc(To), HB) %>% 
+  rename("Health board" = HB,
+         Estimate = HB_indicator,
+         "Target met" = Target_met)
+
+tables <- lapply(indicator_labels, function(i) {
+  xls_pub %>% 
+    filter(Indicator == i) %>% 
+    select(-Indicator)})
+
+names(tables) <- indicator_levels
+
+# create workbook and sheets
+
+wb <- createWorkbook()
+lapply(seq_along(indicator_levels), function(i) {
+  
+  addWorksheet(wb, sheetName = indicator_levels[i], gridLines = FALSE)
+  
+  # title
+  writeData(wb, sheet = i, x = indicator_labels[i])
+  
+  # definition
+  writeData(wb, sheet = i, startRow = 2, x = indicator_definitions[i])
+  
+  # stats report
+  hyperlink <- links[i]
+  names(hyperlink) <- "Statistics report with more information"
+  class(hyperlink) <- "hyperlink"
+  writeData(wb, sheet = i, startRow = 3, x = hyperlink)
+  
+  # table
+  writeDataTable(wb, sheet = i, startRow = 4, x = tables[[i]], 
+                 withFilter = FALSE, 
+                 tableName = str_replace_all(indicator_levels[i], " ", "_"))
+  setColWidths(wb, sheet = i, cols = 1:7, widths = c(25, 20, 12, 10, 10, 10))
+  
+  # formatting
+  addStyle(wb, sheet = i, rows = 1, cols = 1, style = createStyle(textDecoration = "bold"))
+  addStyle(wb, sheet = i, rows = 4, gridExpand = TRUE, cols = 3:5,
+           createStyle(halign = 'right'))
+  addStyle(wb, sheet = i, rows = 4, cols = 6,
+           createStyle(halign = 'left'))
+  
+  if (indicator_levels[i] %in% c("CDI", "SAB")) {
+    
+    addStyle(wb, sheet = i, rows = 5:3000, cols = 4:5, gridExpand = TRUE,
+             style = createStyle(numFmt =  "0.000"))  
+    
+  } else if (indicator_levels[i] == "smoke") {
+    
+    addStyle(wb, sheet = i, rows = 5:3000, cols = 4:5, gridExpand = TRUE,
+             style = createStyle(numFmt = "#,##0"))
+    
+  } else {
+    
+    addStyle(wb, sheet = i, rows = 5:3000, cols = 4:5, gridExpand = TRUE,
+             style = createStyle(numFmt = "0.0%"))}
+  
+})
+
+removeWorksheet(wb, "ABI")
+removeWorksheet(wb, "DCE")
+
+# rearrange worksheets alphabetically
+worksheetOrder(wb) <- order(names(wb))
+
+saveWorkbook(wb, "output/All_measures.xlsx", overwrite = TRUE)
 
 # checks -----------------------------------------------------------------------
 # for most indicators, values and targets should not exceed 1; when they do, it's
@@ -203,14 +312,9 @@ final %>%
                             "SAB infections",
                             "Alcohol Brief Interventions")))
 
-
 final %>% 
   summarise(.by = Indicator,
             maxy = comma(max(HB_indicator, na.rm = T), 0.001),
             miny = comma(min(HB_indicator, na.rm = T), 0.001)) %>% 
   arrange(miny) %>% 
   view()
-
-
-
-
