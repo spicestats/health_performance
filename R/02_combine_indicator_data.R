@@ -37,3 +37,26 @@ data <- lapply(files, readRDS) %>%
 
 
 saveRDS(data, "data/indicator_data.rds")
+
+
+
+# check if data was updated ----------------------------------------------------
+
+
+files_old %>% 
+  group_by(Indicator) %>% 
+  filter(To == max(To)) %>% 
+  distinct(Indicator, To) %>% 
+  rename(Old = To) %>% 
+  left_join(data %>% 
+              group_by(Indicator) %>% 
+              filter(To == max(To)) %>% 
+              distinct(Indicator, To) %>% 
+              rename(New = To), 
+            by = "Indicator") %>% 
+  mutate(diff = New - Old,
+         latest_data = today() - New) %>% 
+  arrange(latest_data) %>% 
+  print()
+
+rm(list = ls())

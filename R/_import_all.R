@@ -18,7 +18,7 @@ files_od <- c("R/01_import_AandE.R",
 
 files_xl <- c("R/01_import_GP.R", # next: spring 2026; every 2 years; 48-hour sub-indicator only available on request
               "R/01_import_PDS.R", # automated
-              "R/01_import_sick.R", # next: 4 Mar 2025; manual download via dashboard only
+              "R/01_import_sick.R", # next: Mar 2026?; manual download via dashboard only
               "R/01_import_smoke.R") # next: winter 2025/2026; manual download via dashboard while spreadsheet is too awful to automate
 
 # no longer active -------------------------------------------------------------

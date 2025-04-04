@@ -26,6 +26,7 @@ data <- readRDS("data/indicator_data.rds") %>%
     "sick",
     "PDS", "PT", "CAMHS",
     "outpatient", "TTG", "RTT", 
+    "diagnostic",
     "DCE",
     "cancerWT",
     "AandE",
@@ -42,6 +43,7 @@ data <- readRDS("data/indicator_data.rds") %>%
       "12 weeks first outpatient\nappointment",
       "Treatment time guarantee",
       "18 weeks referral\nto treatment",
+      "Diagnostic treatment times",
       "Detect Cancer Early",
       "Cancer waiting times",
       "Accident and Emergency\nwaiting times",
@@ -72,9 +74,8 @@ data <- readRDS("data/indicator_data.rds") %>%
          .by = Indicator) %>% 
   arrange(Indicator, desc(To), Target_met) 
 
-indicators <- unique(data$Indicator)
 
-charts <- lapply(indicators, function(i) {
+charts <- lapply(levels(data$Indicator), function(i) {
   
   data %>% 
     filter(Indicator == i) %>% 
@@ -121,7 +122,7 @@ charts <- lapply(indicators, function(i) {
   
 })
 
-for (i in 1:17) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
+for (i in 1:18) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
 
 plot <- wrap_plots(charts, ncol = 1) +
   plot_layout(guides = "collect") & 

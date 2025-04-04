@@ -140,8 +140,9 @@ final <- data_prepped %>%
   
   mutate(.by = c(Indicator, To),
          Scotland_indicator = max(Scotland_indicator, na.rm = TRUE),
-         Scotland_indicator = ifelse(Scotland_indicator == -Inf, NA, Scotland_indicator)) %>% 
-  filter(HB != "Scotland") %>% 
+         Scotland_indicator = ifelse(Scotland_indicator == -Inf, NA, Scotland_indicator),
+         HB_indicator = ifelse(is.na(HB_indicator) & HB == "Scotland", Scotland_indicator, HB_indicator)) %>% 
+  #filter(HB != "Scotland") %>% 
   
   mutate(Period = case_when(as.numeric(difftime(To, From), unit = "days") %in% c(1090:1460) ~ paste("Two years to", format(To, "%d %b %Y")),
                             as.numeric(difftime(To, From), unit = "days") %in% c(729:731) ~ paste("Two years to", format(To, "%d %b %Y")),
@@ -174,15 +175,21 @@ final <- data_prepped %>%
                                   !is.na(HB_indicator) & !Target_met & HB_indicator >= Target ~   paste0("does not meet standard (at most ", percent(Target, 1), ")")),
          Target_label1 = ifelse(!is.na(Target_label), paste0(HB, " ", Target_label, "."), NA),
          Target_label2 = ifelse(!is.na(Scotland_comparison), paste0(HB, " estimate is ", Scotland_comparison, " Scotland estimate (", Formatted_Scotland_value, ")."), NA),
+         Target_label2 = ifelse(grepl("Scotland estimate is the same as Scotland estimate", Target_label2), NA, Target_label2),
          Defs = factor(Indicator, levels = indicator_labels, labels = indicator_definitions),
          
          # remove Scotland values from smoking measure as the scale of it messes up the charts
          Scotland_indicator = ifelse(Indicator == "Smoking cessation", NA, Scotland_indicator),
          Target_label2 = ifelse(Indicator == "Smoking cessation", NA, Target_label2),
          
-         HB = str_replace(HB, " and ", " & ")) %>% 
+         HB = str_replace(HB, " and ", " & "),
+         HB = factor(HB, ordered = TRUE),
+         HB = fct_relevel(HB, "Scotland", after = 16L),
+         HB_order = factor(HB, levels = levels(HB), labels = 1:16),
+         HB_order = as.numeric(HB_order)) %>% 
   arrange(Indicator, desc(To), HB) %>% 
-  select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label)
+  select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label) 
+
 
 writexl::write_xlsx(final, "output/indicator_data.xlsx")
 
