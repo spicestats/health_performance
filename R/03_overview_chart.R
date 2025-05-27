@@ -87,8 +87,8 @@ charts <- lapply(levels(data$Indicator), function(i) {
               size = 5,
               lineheight = 0.95) +
     
-    scale_x_date(limits = c(dmy("01042015", "01012025")),
-                 breaks = dmy(paste("1-1-", c(2015:2025))),
+    scale_x_date(limits = c(dmy("01042015", "01012026")),
+                 breaks = dmy(paste("1-1-", c(2015:2026))),
                  date_labels = "%Y",
                  expand = expansion(add = c(1700, 30))) +
     scale_fill_manual(values = c("Target missed" = unname(spcols["darkblue"]),
@@ -132,5 +132,5 @@ plot <- wrap_plots(charts, ncol = 1) +
 #plot
 
 ggsave(plot = plot, "output/chart.png", dpi = 700, bg = "white", 
-       width = 11, height = 10)
+       width = 12, height = 10)
 

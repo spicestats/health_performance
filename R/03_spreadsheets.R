@@ -66,7 +66,7 @@ indicator_definitions <- c(
   PDS = "People newly diagnosed with dementia should be offered a minimum of one year's post-diagnostic support, coordinated by a named link worker.",
   PT = "90% of patients should begin Psychological Therapy based treatment within 18 weeks of referral.", 
   CAMHS = "90% of young people should begin treatment for specialist Child and Adolescent Mental Health services within 18 weeks of referral.",
-  outpatient = "95% of new outpatients should receive an outpatient appointment within 12 weeks. Health boards should work towards 100 per cent.",
+  outpatient = "95% of new outpatients should receive an outpatient appointment within 12 weeks. Health boards should work towards 100%.",
   TTG = "All patients should receive their treatment within 12 weeks.", 
   RTT = "90% of planned / elective patients should begin treatment within 18 weeks of referral.", 
   diagnostic = "All patients should receive key diagnostic tests / investigations (upper & lower endoscopy, colonoscopy, cytoscopy, CT scan, MRI scan, barium studies, non-obstetric ultrasound) within 6 weeks.",
@@ -184,7 +184,7 @@ final <- data_prepped %>%
          
          HB = str_replace(HB, " and ", " & "),
          HB = factor(HB, ordered = TRUE),
-         HB = fct_relevel(HB, "Scotland", after = 16L),
+         HB = fct_relevel(HB, "Scotland", after = 0L),
          HB_order = factor(HB, levels = levels(HB), labels = 1:16),
          HB_order = as.numeric(HB_order)) %>% 
   arrange(Indicator, desc(To), HB) %>% 
@@ -266,6 +266,7 @@ lapply(seq_along(indicator_levels), function(i) {
 
 removeWorksheet(wb, "ABI")
 removeWorksheet(wb, "DCE")
+removeWorksheet(wb, "RTT")
 
 # rearrange worksheets alphabetically
 worksheetOrder(wb) <- order(names(wb))

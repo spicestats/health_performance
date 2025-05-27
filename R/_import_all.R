@@ -10,8 +10,7 @@ files_od <- c("R/01_import_AandE.R",
               "R/01_import_drug.R",
               "R/01_import_IVF.R",
               "R/01_import_outpatient_TTG.R",
-              "R/01_import_PT.R",
-              "R/01_import_RTT.R")
+              "R/01_import_PT.R") 
 
 # spreadsheet only -------------------------------------------------------------
 # all annual or every 2 years
@@ -24,7 +23,8 @@ files_xl <- c("R/01_import_GP.R", # next: spring 2026; every 2 years; 48-hour su
 # no longer active -------------------------------------------------------------
 
 files_dead <- c("R/01_import_DCE.R",
-                "R/01_import_ABI.R")
+                "R/01_import_ABI.R",
+                "R/01_import_RTT.R")
 
 # run import and combine scripts -----------------------------------------------
 
