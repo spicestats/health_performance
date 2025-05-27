@@ -79,8 +79,8 @@ indicator_definitions <- c(
   "GP Two_days" = "GPs should provide 48 hour access to an appropriate member of the GP team for at least 90% of patients.",
   ante = "At least 80% of pregnant women in each Scottish Index of Multiple Deprivation quintile should have booked for antenatal care by the 12th week of gestation.", 
   IVF = "90% of eligible patients should begin IVF treatment within 12 months of referral.",  
-  CDI = "NHS Boards' rate of clostridium difficile infections in patients aged 15 and over should be 0.32 cases or less per 1,000 total occupied bed days. Standard currently under review.",
-  SAB = "NHS Boards' rate of SAB (staphylococcus aureus bacteraemia (including MRSA)) cases should be 0.24 or less per 1,000 acute occupied bed days. Standard currently under review.", 
+  CDI = "NHS Boards' rate of healthcare-associated clostridium difficile infections in patients aged 15 and over should be 0.32 cases or less per 1,000 total occupied bed days. Standard currently under review.",
+  SAB = "NHS Boards' rate of healthcare-associated SAB (staphylococcus aureus bacteraemia (including MRSA)) cases should be 0.24 or less per 1,000 acute occupied bed days. Standard currently under review.", 
   drug = "90% of clients should wait no longer than 3 weeks from referral received to appropriate drug or alcohol treatment that supports their recovery.",
   ABI = "NHS Boards should sustain and embed alcohol brief interventions in 3 priority settings (primary care, A&E, antenatal) and broaden delivery in wider settings.")
 
