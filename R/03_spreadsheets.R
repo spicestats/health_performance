@@ -191,7 +191,7 @@ final <- data_prepped %>%
   select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label) 
 
 
-writexl::write_xlsx(final, "output/indicator_data.xlsx")
+writexl::write_xlsx(final, paste0(Gdrive_path, "/indicator_data.xlsx"))
 
 # xlsx for publishing ----------------------------------------------------------
 
@@ -271,7 +271,7 @@ removeWorksheet(wb, "RTT")
 # rearrange worksheets alphabetically
 worksheetOrder(wb) <- order(names(wb))
 
-saveWorkbook(wb, "output/All_measures.xlsx", overwrite = TRUE)
+saveWorkbook(wb,  paste0(Gdrive_path, "/All_measures.xlsx"), overwrite = TRUE)
 
 # checks -----------------------------------------------------------------------
 # for most indicators, values and targets should not exceed 1; when they do, it's
