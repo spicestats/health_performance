@@ -59,4 +59,4 @@ files_old %>%
   arrange(latest_data) %>% 
   print()
 
-rm(list = ls())
+
