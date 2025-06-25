@@ -5,6 +5,8 @@ library(polite)
 library(rvest)
 library(httr)
 library(jsonlite)
+library(scales)
+library(openxlsx)
 
 source("R/f_round2.R")
 

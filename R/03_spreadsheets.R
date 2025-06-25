@@ -1,8 +1,6 @@
 # load -------------------------------------------------------------------------
 
-library(tidyverse)
-library(scales)
-library(openxlsx)
+source("R/00_config.R")
 
 data <- readRDS("data/indicator_data.rds")
 
@@ -264,9 +262,12 @@ lapply(seq_along(indicator_levels), function(i) {
   
 })
 
-removeWorksheet(wb, "ABI")
-removeWorksheet(wb, "DCE")
-removeWorksheet(wb, "RTT")
+# rename sheets
+names(wb) <- indicator_labels
+
+removeWorksheet(wb, "Alcohol Brief Interventions")
+removeWorksheet(wb, "Detect Cancer Early")
+removeWorksheet(wb, "18 weeks referral to treatment")
 
 # rearrange worksheets alphabetically
 worksheetOrder(wb) <- order(names(wb))
