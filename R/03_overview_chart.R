@@ -21,7 +21,10 @@ spcols <- c(purple = "#500778",
 data <- readRDS("data/indicator_data.rds") %>% 
   filter(HB == "Scotland",
          !is.na(Target_met),
-         From >= dmy("01-04-2015")) %>% 
+         From >= dmy("01-04-2015"),
+         Indicator != "RTT",
+         Indicator != "ABI",
+         Indicator != "DCE") %>% 
   mutate(Indicator = factor(Indicator, levels = c(
     "sick",
     "PDS", "PT", "CAMHS",
@@ -75,7 +78,7 @@ data <- readRDS("data/indicator_data.rds") %>%
   arrange(Indicator, desc(To), Target_met) 
 
 
-charts <- lapply(levels(data$Indicator), function(i) {
+charts <- lapply(unique(data$Indicator), function(i) {
   
   data %>% 
     filter(Indicator == i) %>% 
@@ -122,7 +125,7 @@ charts <- lapply(levels(data$Indicator), function(i) {
   
 })
 
-for (i in 1:18) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
+for (i in 1:15) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
 
 plot <- wrap_plots(charts, ncol = 1) +
   plot_layout(guides = "collect") & 
