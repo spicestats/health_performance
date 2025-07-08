@@ -1,7 +1,5 @@
 # load -------------------------------------------------------------------------
 
-source("R/00_config.R")
-
 data <- readRDS("data/indicator_data.rds")
 
 # names & defs -----------------------------------------------------------------
@@ -268,6 +266,7 @@ names(wb) <- indicator_labels
 removeWorksheet(wb, "Alcohol Brief Interventions")
 removeWorksheet(wb, "Detect Cancer Early")
 removeWorksheet(wb, "18 weeks referral to treatment")
+removeWorksheet(wb, "Dementia post-diagnostic suppor")
 
 # rearrange worksheets alphabetically
 worksheetOrder(wb) <- order(names(wb))

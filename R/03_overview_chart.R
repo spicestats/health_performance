@@ -1,7 +1,3 @@
-library(tidyverse)
-library(extrafont)
-library(patchwork)
-source("R/00_config.R")
 
 # Colours ----------------------------------------------------------------------
 
@@ -24,7 +20,8 @@ data <- readRDS("data/indicator_data.rds") %>%
          From >= dmy("01-04-2015"),
          Indicator != "RTT",
          Indicator != "ABI",
-         Indicator != "DCE") %>% 
+         Indicator != "DCE",
+         Indicator != "PDS") %>% 
   mutate(Indicator = factor(Indicator, levels = c(
     "sick",
     "PDS", "PT", "CAMHS",
@@ -125,7 +122,7 @@ charts <- lapply(unique(data$Indicator), function(i) {
   
 })
 
-for (i in 1:15) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
+for (i in 1:14) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
 
 plot <- wrap_plots(charts, ncol = 1) +
   plot_layout(guides = "collect") & 

@@ -7,6 +7,8 @@ library(httr)
 library(jsonlite)
 library(scales)
 library(openxlsx)
+library(extrafont)
+library(patchwork)
 
 source("R/f_round2.R")
 
