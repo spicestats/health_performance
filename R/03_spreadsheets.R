@@ -188,6 +188,7 @@ final <- data_prepped %>%
 
 
 writexl::write_xlsx(final, paste0(Gdrive_path, "/indicator_data.xlsx"))
+writexl::write_xlsx(final, "dashboard_output/indicator_data.xlsx")
 
 # xlsx for publishing ----------------------------------------------------------
 
@@ -272,6 +273,7 @@ removeWorksheet(wb, "Dementia post-diagnostic suppor")
 worksheetOrder(wb) <- order(names(wb))
 
 saveWorkbook(wb,  paste0(Gdrive_path, "/All_measures.xlsx"), overwrite = TRUE)
+saveWorkbook(wb,  "dashboard_output/All_measures.xlsx", overwrite = TRUE)
 
 # checks -----------------------------------------------------------------------
 # for most indicators, values and targets should not exceed 1; when they do, it's
