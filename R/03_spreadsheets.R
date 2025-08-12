@@ -187,7 +187,7 @@ final <- data_prepped %>%
   select(-From, -Target_met, -Formatted_Scotland_value, -Scotland_comparison, -Target_label) 
 
 
-writexl::write_xlsx(final, paste0(Gdrive_path, "/indicator_data.xlsx"))
+writexl::write_xlsx(final, paste0(SP_path, "/indicator_data.xlsx"))
 writexl::write_xlsx(final, "dashboard_output/indicator_data.xlsx")
 
 # xlsx for publishing ----------------------------------------------------------
@@ -272,7 +272,7 @@ removeWorksheet(wb, "Dementia post-diagnostic suppor")
 # rearrange worksheets alphabetically
 worksheetOrder(wb) <- order(names(wb))
 
-saveWorkbook(wb,  paste0(Gdrive_path, "/All_measures.xlsx"), overwrite = TRUE)
+saveWorkbook(wb,  paste0(SP_path, "/All_measures.xlsx"), overwrite = TRUE)
 saveWorkbook(wb,  "dashboard_output/All_measures.xlsx", overwrite = TRUE)
 
 # checks -----------------------------------------------------------------------

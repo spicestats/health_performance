@@ -39,7 +39,7 @@ Specialty_lookup <- readxl::read_xlsx("data/HBcodes_specialties_lookup.xlsx",
          Name = 2) %>% 
   filter(!is.na(Name))
 
-Gdrive_path <- "G:/RIG/SPICe/Files incompatible with Sharepoint/Statistics_onG/Dashboards/health_performance"
+SP_path <- "C:/Users/s910140/The Scottish Parliament/Scottish Parliament Information Centre - Data sync/Dashboards/health performance"
 
 
 

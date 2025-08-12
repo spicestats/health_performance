@@ -1,3 +1,8 @@
+# NEW ----
+
+# push to github so that dashboard automatically updates
+# git push github master
+
 
 # open data indicators ---------------------------------------------------------
 
