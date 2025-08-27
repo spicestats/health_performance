@@ -8,22 +8,22 @@
 
 
 # xlsx files get updated more quickly
-url <- "https://publichealthscotland.scot/healthcare-system/urgent-and-unscheduled-care/accident-and-emergency/downloads-and-open-data/our-downloads"
+#url <- "https://publichealthscotland.scot/healthcare-system/urgent-and-unscheduled-care/accident-and-emergency/downloads-and-open-data/our-downloads"
 
 
 # need live session as website loads dynamically
-session <- read_html_live(url)
+#session <- read_html_live(url)
 
-links <- session %>% 
-  html_elements(".chart-downloads") %>% 
-  html_elements("a") %>% 
-  html_attr("href")
-
-download_link <- links[grepl("monthly-attendance-and-waiting-times.xlsx", links)]
-
-download.file(paste0("https://publichealthscotland.scot/", download_link), 
-              "data/AE.xlsx",
-              mode = "wb")
+#links <- session %>% 
+#   html_elements(".chart-downloads") %>% 
+#   html_elements("a") %>% 
+#   html_attr("href")
+# 
+# download_link <- links[grepl("monthly-attendance-and-waiting-times.xlsx", links)]
+# 
+# download.file(paste0("https://publichealthscotland.scot/", download_link), 
+#               "data/AE.xlsx",
+#               mode = "wb")
 
 excel <- readxl::read_xlsx("data/AE.xlsx", sheet = "Scotland") %>% 
   rbind(readxl::read_xlsx("data/AE.xlsx", sheet = "NHSBoards"))
