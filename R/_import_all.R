@@ -1,3 +1,6 @@
+source("R/00_config.R")
+
+
 # NEW ----
 
 # push to github so that dashboard automatically updates
@@ -55,7 +58,6 @@ download.file(paste0("https://publichealthscotland.scot/", download_link),
 
 # run import and combine scripts -----------------------------------------------
 
-source("R/00_config.R")
 lapply(c(#files_manual,
          files_od), source)
 
