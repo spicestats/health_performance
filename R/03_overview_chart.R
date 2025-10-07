@@ -124,6 +124,7 @@ charts <- lapply(unique(data$Indicator), function(i) {
 
 for (i in 1:14) {charts[[i]] <- charts[[i]] + theme(axis.text = element_blank())}
 
+
 plot <- wrap_plots(charts, ncol = 1) +
   plot_layout(guides = "collect") & 
   theme(plot.margin = unit(c(0, 0.2, 0, 0), "cm"),
